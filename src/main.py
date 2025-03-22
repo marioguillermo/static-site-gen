@@ -5,7 +5,7 @@ import sys
 from markdown_blocks import markdown_to_html_node
 
 
-def copy_static_to_public(source='static', destination='public'):
+def copy_static_to_public(source='static', destination='docs'):
     # Step 1: Delete all contents of the destination directory
     if os.path.exists(destination):
         shutil.rmtree(destination)
