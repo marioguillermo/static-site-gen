@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 from markdown_blocks import markdown_to_html_node
 
@@ -51,7 +52,7 @@ def clear_public_directory(path='public'):
         print(f"Directory '{path}' does not exist.")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(basepath, from_path, template_path, dest_path):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     # Step 1: Read the markdown content
@@ -70,7 +71,10 @@ def generate_page(from_path, template_path, dest_path):
     title = extract_title(markdown_content)
 
     # Step 5: Fill in the template
-    final_html = template_content.replace('{{ Title }}', title).replace('{{ Content }}', html_content)
+    final_html = (template_content.replace('{{ Title }}', title)
+                  .replace('{{ Content }}', html_content)
+                  .replace('href="/', f'href="{basepath}')
+                  .replace('src="/', f'src="{basepath}'))
 
     # Step 6: Ensure destination directory exists
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
@@ -80,7 +84,7 @@ def generate_page(from_path, template_path, dest_path):
         f.write(final_html)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(basepath, dir_path_content, template_path, dest_dir_path):
     for root, _, files in os.walk(dir_path_content):
         for filename in files:
             if filename.endswith('.md'):
@@ -96,11 +100,12 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 dest_path = os.path.join(dest_dir_path, relative_html_path)
 
                 # Generate the page
-                generate_page(from_path, template_path, dest_path)
+                generate_page(basepath, from_path, template_path, dest_path)
+
 
 if __name__ == '__main__':
-    clear_public_directory("public")
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+    print(f"This is the base path {basepath}")
+    clear_public_directory("docs")
     copy_static_to_public()
-    generate_pages_recursive("content", "template.html", "public")
-
-
+    generate_pages_recursive(basepath, "content", "template.html", "docs")
